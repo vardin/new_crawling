@@ -16,4 +16,9 @@ def get_stocks(market=None):
     list_up = df_stocks['회사명'].values
     return list(list_up) 
 
-print(get_stocks("kospi"))
+def get_company_list():
+    kospi= get_stocks("kospi")
+    kosdaq = get_stocks("kosdaq")
+    company = kospi + kosdaq
+    return company
+

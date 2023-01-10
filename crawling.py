@@ -6,12 +6,13 @@ from  bs4  import  BeautifulSoup  as  bs
 import  schedule
 import  time
 from get_stock import get_stocks
+from get_stock import get_company_list
 
 
 TOKEN = "5893171109:AAEgunTsyUkxEqqNKKLbq6kihVfMnHb6Xbw"
 CHAT_ID = "1099791233"
 
-
+company = get_company_list()
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -29,8 +30,11 @@ def send_telegram_message(text):
 def get_new_links(query, old_links=[]):
 
     # (주의) 네이버에서 키워드 검색 - 뉴스 탭 클릭 - 최신순 클릭 상태의 url
+    # 1시간 내의 뉴스
     url = f'https://search.naver.com/search.naver?where=news&query={query}&sm=tab_opt&sort=1&photo=0&field=0&pd=7&ds=&de=&docid=&related=0&mynews=0&office_type=0&office_section_code=0&news_office_checked=&nso=so%3Add%2Cp%3Aall&is_sug_officeid=0'
-
+    # 전체 뉴스
+    # url = f'https://search.naver.com/search.naver?where=news&query={query}&sm=tab_opt&sort=1&photo=0&field=0&pd=0&ds=&de=&docid=&related=0&mynews=0&office_type=0&office_section_code=0&news_office_checked=&nso=so%3Add%2Cp%3Aall&is_sug_officeid=0'
+    global company
     # html 문서 받아서 파싱(parsing)
     response = requests.get(url)
     soup = bs(response.text, 'html.parser')
@@ -38,13 +42,47 @@ def get_new_links(query, old_links=[]):
     # 해당 페이지의 뉴스기사 링크가 포함된 html 요소 추출
     news_titles = soup.select('a.news_tit')
 
+    # 요소에서 타이틀만 추출해서 리스트로 저장
+    # new_links = [link for link in list_links if link not in old_links]
+    # list_links = []
+    # new_links = []
+    # for i in news_titles:
+    #     title = i.attrs['title']
+        
+    #     for c in company:
+    #         if c in title:
+    #             list_links.append(i.attrs['href'])
+    #             print(title)
+    #             print(c)
+                
+    #             # print(list_links)
+    # print("===old")
+    # print(old_links)
+
+    # for list in list_links:
+    #     if list not in old_links:
+    #         old_links.append(list)
+            
+    # new_links = [link for link in list_links if link not in old_links]
+
+    
+    list_links = []
+         
     # 요소에서 링크만 추출해서 리스트로 저장
-    list_links = [i.attrs['href'] for i in news_titles]
+
+    for i in news_titles:
+        for j in company:
+            if j in i.attrs['title']:
+                
+                print(j+i.attrs['title'])
+                list_links.append(i.attrs['href'])
 
     # 기존의 링크와 신규 링크를 비교해서 새로운 링크만 저장
     new_links = [link for link in list_links if link not in old_links]
 
     return new_links
+
+    
 
 def send_links(query):
     # 함수 내에서 처리된 리스트를 함수 외부에서 참조하기 위함
@@ -66,7 +104,9 @@ def send_links(query):
     # 기존 링크를 계속 축적하기 위함
 
     old_links += new_links.copy()
-    old_links +=  new_links.copy()
+    # print("eeeeeee old")
+    # print(old_links)
+    # old_links +=  new_links.copy()
 
 
 if __name__ == '__main__':
@@ -81,19 +121,16 @@ if __name__ == '__main__':
 
     kospi= get_stocks("kospi")
     kosdaq = get_stocks("kosdaq")
-    print(type(kospi))
     company = kospi + kosdaq
     # company = ["BYD"]  # 테스트
     key_word = ["매각", "인수", "경영권 분쟁"]
-    queries = []
-    for i in company:
-        for j in key_word:
-            queries.append(i+' '+j)
-    print(queries)
+    # queries = []
+    # for i in company:
+    #     for j in key_word:
+    #         queries.append(i+' '+j)
+    # print(queries)
         
-    # queries = ["부동산", "경제", "날씨"]
-
-    for query in queries:
+    for query in key_word:
 
         # 위에서 얻은 chat id로 bot이 메세지를 보냄.
         # send_telegram_message(text=f"{query}를 주제로 뉴스 기사 크롤링이 시작 되었습니다")
@@ -102,7 +139,7 @@ if __name__ == '__main__':
         old_links = []
 
         # 주기적 실행과 관련된 코드 (hours는 시, minutes는 분, seconds는 초)
-        job = schedule.every(60).minutes.do(send_links, query)
+        job = schedule.every(300).seconds.do(send_links, query)
 
     while True:
         schedule.run_pending()
