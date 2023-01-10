@@ -1,6 +1,6 @@
 import logging
-from telegram import Update
-from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler
+# from telegram import Update
+# from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler
 import requests
 from  bs4  import  BeautifulSoup  as  bs
 import  schedule
