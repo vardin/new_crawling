@@ -24,7 +24,7 @@ logging.basicConfig(
 
 def send_telegram_message(text):
     send_api = 'https://api.telegram.org/bot' + TOKEN + '/sendMessage?chat_id=' + CHAT_ID + '&text=' + text
-    r = requests.get(send_api)
+    r = requests.get(send_api, verify= False)
     print (r.json())
 
 def get_new_links(query, old_links=[]):
@@ -139,7 +139,7 @@ if __name__ == '__main__':
         old_links = []
 
         # 주기적 실행과 관련된 코드 (hours는 시, minutes는 분, seconds는 초)
-        job = schedule.every(300).seconds.do(send_links, query)
+        job = schedule.every(600).seconds.do(send_links, query)
 
     while True:
         schedule.run_pending()
